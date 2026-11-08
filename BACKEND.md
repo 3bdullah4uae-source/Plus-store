@@ -34,3 +34,25 @@
 ## Deployment
 
 `render.yaml` currently deploys the HTML **static preview only**. It does not deploy this Node backend or PostgreSQL. Create a separate private web service and database when ready; do not mistake the static preview for a live account system.
+
+
+## Frontend integration
+
+The Node server now serves:
+- `/` — storefront (`index.html`).
+- `/account` — account registration, sign-in, catalog and draft orders (`account.html`).
+- `/demo` — browser-local prototype (`app.html`, independent from real accounts).
+
+`account.html` makes relative same-origin API calls under `/api/`, so it must be served on the **Node service**. Opening the page via static GitHub HTML preview cannot make live accounts work. Keep the static Render preview separate from the backend.
+
+Before exposing the Node service: configure PostgreSQL, set `PUBLIC_ORIGIN` to the HTTPS origin users actually see, review proxy TLS and cookies, apply migrations, add end-to-end security tests and production-ready rate limiting, and complete email verification and password recovery. The code has not yet been deployed or runtime-tested in a live environment.
+
+### Manual acceptance tests (when environment exists)
+1. Visit `/api/health`, verify no signing or payments.
+2. Create test customer, verify password is never returned, and verify secure cookie is set.
+3. Log in and visit `/api/me`; verify customer role.
+4. Add a permitted test catalog item directly by trusted admin database procedure, then create a draft order.
+5. Verify a different customer cannot view another customer's orders.
+6. Verify customer receives 403 on `/api/admin/orders`.
+7. Log out and verify previous cookie no longer authorizes access.
+8. Verify new orders cannot trigger payment, IPA signing or paid subscriptions.
