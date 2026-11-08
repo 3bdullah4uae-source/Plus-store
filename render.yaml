@@ -1,0 +1,18 @@
+# Plus Store - static preview deployment on Render
+# No payments, accounts, or IPA signing are enabled in this preview.
+services:
+  - type: web
+    name: plus-store-preview
+    runtime: static
+    buildCommand: echo "Plus Store static site is ready"
+    staticPublishPath: ./
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
