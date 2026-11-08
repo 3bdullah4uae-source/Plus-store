@@ -49,7 +49,7 @@ const idHash = token => createHash('sha256').update(token + sessionSecret).diges
 const parseCookie = (cookie, key) => (cookie || '').split(';').map(x => x.trim()).find(x => x.startsWith(key + '='))?.slice(key.length + 1);
 const cookieFlags = 'HttpOnly; SameSite=Strict; Path=/api; ' + (isProduction ? 'Secure; ' : '') + 'Max-Age=604800';
 const clearFlags = 'HttpOnly; SameSite=Strict; Path=/api; ' + (isProduction ? 'Secure; ' : '') + 'Max-Age=0';
-const goodEmail = e => typeof e === 'string' && e.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(e);
+const goodEmail = e => typeof e === 'string' && e.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 async function hashPassword(p) {
   const salt = randomBytes(16).toString('hex');
   const derived = await scrypt(p, salt, 64);
@@ -88,7 +88,7 @@ for (const [route, filename] of [['/', 'index.html'], ['/account', 'account.html
     } catch (err) { next(err); }
   });
 }
-app.get('/api/health', (_req, res) => res.json({ status: 'ok', payments: false, signing: false }));
+app.get('/api/health', async (_req, res) => { try { await pool.query('SELECT 1'); res.json({ status: 'ok', database: 'connected', payments: false, signing: false }); } catch { res.status(503).json({ status: 'unavailable', database: 'disconnected', payments: false, signing: false }); } });
 app.post('/api/register', rateLimit, async (req, res, next) => {
   try {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
