@@ -2,6 +2,9 @@ import express from 'express';
 import pg from 'pg';
 import { randomBytes, scrypt as scryptCallback, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
 const scrypt = promisify(scryptCallback);
 const app = express();
@@ -76,6 +79,15 @@ async function auth(req, res, next) {
   } catch (err) { next(err); }
 }
 const adminOnly = (req, res, next) => req.user.role === 'admin' ? next() : res.status(403).json({ error: 'Forbidden' });
+// Serve only specifically named HTML pages. Do not expose source code or database files.
+const root = dirname(fileURLToPath(import.meta.url));
+for (const [route, filename] of [['/', 'index.html'], ['/account', 'account.html'], ['/demo', 'app.html']]) {
+  app.get(route, async (_req, res, next) => {
+    try {
+      res.type('html').send(await readFile(join(root, filename), 'utf8'));
+    } catch (err) { next(err); }
+  });
+}
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', payments: false, signing: false }));
 app.post('/api/register', rateLimit, async (req, res, next) => {
   try {
