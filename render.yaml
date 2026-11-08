@@ -4,8 +4,8 @@ services:
   - type: web
     name: plus-store-preview
     runtime: static
-    buildCommand: echo "Plus Store static site is ready"
-    staticPublishPath: ./
+    buildCommand: mkdir -p dist && cp index.html app.html dist/
+    staticPublishPath: ./dist
     headers:
       - path: /*
         name: X-Content-Type-Options
